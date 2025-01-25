@@ -528,6 +528,10 @@
         writer.setStringUTF8(name);
         wsSend(writer);
     }
+    function sendExit() {
+      sendChat('/kill');
+    }
+
     function sendChat(text) {
         const writer = new Writer();
         writer.setUint8(0x63);
@@ -591,6 +595,11 @@
         score: NaN,
         maxScore: 0
     });
+
+    const exitTimer = Object.create({
+      canvas: document.createElement('canvas'),
+      visible: false,
+  });
 
     const knownSkins = new Map();
     const loadedSkins = new Map();
@@ -870,6 +879,24 @@
         return `${days}d`;
     }
 
+    function drawExitTimer(closeSecond) {
+        exitTimer.visible = true;
+        const canvas = exitTimer.canvas;
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = 300;
+        canvas.height = 60;
+
+        ctx.globalAlpha = .4;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 200, canvas.height);
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#FFF';
+        ctx.font = '30px Ubuntu';
+        ctx.fillText(`Exit after: ${closeSecond}s`, 100 - ctx.measureText(`Exit after: ${closeSecond}s`).width / 2, 40);
+    }
+
     function drawLeaderboard() {
         if (leaderboard.type === null) return leaderboard.visible = false;
         if (!settings.showNames || leaderboard.items.length === 0) {
@@ -1116,6 +1143,12 @@
             mainCtx.drawImage(
                 leaderboard.canvas,
                 mainCanvas.width / camera.viewportScale - 10 - leaderboard.canvas.width,
+                10);
+        }
+        if(exitTimer.visible) {
+            mainCtx.drawImage(
+                exitTimer.canvas,
+                mainCanvas.width / 2,
                 10);
         }
         if (settings.showChat && (chat.visible || isTyping)) {
@@ -1631,6 +1664,20 @@
         camera.userZoom = Math.min(camera.userZoom, 4);
     }
 
+    function handleExitClick() {
+      const exitButton = document.getElementById('exit-button');
+      exitButton.style.display = 'none';
+
+      for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+          drawExitTimer( 10 - i);
+        }, i * 1000);
+      }
+
+      setTimeout(() => {
+        sendExit();
+      }, 10000);
+  }
     function init() {
         mainCanvas = document.getElementById('canvas');
         mainCtx = mainCanvas.getContext('2d');
@@ -1642,6 +1689,12 @@
         window.addEventListener('beforeunload', storeSettings);
         document.addEventListener('wheel', handleScroll, {passive: true});
         byId('play-btn').addEventListener('click', () => {
+          const exitButton = document.getElementById('exit-button');
+          if (exitButton) {
+              exitButton.style.display = 'block';
+              exitButton.addEventListener('click', handleExitClick);
+          }
+
             const skin = settings.skin;
             sendPlay((skin ? `<${skin}>` : '') + settings.nick);
             hideESCOverlay();

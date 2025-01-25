@@ -151,3 +151,24 @@ input[type=checkbox] {
     margin-right: 10px;
     user-select: none;
 }
+
+.exit-button {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    background-color: rgba(221, 221, 221, 0.7);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    display: none;
+}
+
+.exit-button:hover {
+    background-color: rgba(200, 200, 200, 0.9);
+}
